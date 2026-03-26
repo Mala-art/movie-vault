@@ -1,0 +1,226 @@
+openapi: 3.0.4
+info:
+  title: The Movie Vault API
+  version: 1.0.0
+  description: |
+    Ett enkelt REST API för att hantera en filmsamling.
+    API:et stödjer CRUD-operationer, validering och filtrering via query parameter.
+
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+
+tags:
+  - name: Movies
+    description: Endpoints för att hantera filmer
+
+paths:
+  /api/movies:
+    get:
+      tags:
+        - Movies
+      summary: Hämta alla filmer
+      description: Returnerar hela filmlistan. Kan filtreras med minRating.
+      parameters:
+        - in: query
+          name: minRating
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 5
+          description: Returnerar bara filmer med detta betyg eller högre
+      responses:
+        "200":
+          description: Lista med filmer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Movie"
+
+    post:
+      tags:
+        - Movies
+      summary: Skapa en ny film
+      description: Lägger till en ny film i filmsamlingen
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewMovie"
+            examples:
+              example1:
+                summary: Exempel på ny film
+                value:
+                  title: Avatar
+                  director: James Cameron
+                  year: 2009
+                  rating: 5
+      responses:
+        "201":
+          description: Film skapad
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Movie"
+        "400":
+          description: Felaktig request, till exempel saknade fält eller ogiltig rating/year
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/movies/{id}:
+    get:
+      tags:
+        - Movies
+      summary: Hämta en film via id
+      description: Returnerar en specifik film
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Filmens id
+      responses:
+        "200":
+          description: En specifik film
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Movie"
+        "404":
+          description: Filmen hittades inte
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    put:
+      tags:
+        - Movies
+      summary: Uppdatera en film
+      description: Uppdaterar en befintlig film via id
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Filmens id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewMovie"
+            examples:
+              example1:
+                summary: Exempel på uppdatering
+                value:
+                  title: Inception
+                  director: Christopher Nolan
+                  year: 2010
+                  rating: 5
+      responses:
+        "200":
+          description: Film uppdaterad
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Movie"
+        "400":
+          description: Felaktig request, till exempel saknade fält eller ogiltig rating/year
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Filmen hittades inte
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    delete:
+      tags:
+        - Movies
+      summary: Ta bort en film
+      description: Tar bort en film via id
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Filmens id
+      responses:
+        "204":
+          description: Film borttagen
+        "404":
+          description: Filmen hittades inte
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+components:
+  schemas:
+    Movie:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: The Matrix
+        director:
+          type: string
+          example: The Wachowskis
+        year:
+          type: integer
+          example: 1999
+        rating:
+          type: number
+          example: 5
+      required:
+        - id
+        - title
+        - director
+        - year
+        - rating
+
+    NewMovie:
+      type: object
+      properties:
+        title:
+          type: string
+          example: Avatar
+        director:
+          type: string
+          example: James Cameron
+        year:
+          type: integer
+          example: 2009
+        rating:
+          type: number
+          minimum: 1
+          maximum: 5
+          example: 5
+      required:
+        - title
+        - director
+        - year
+        - rating
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Movie not found
